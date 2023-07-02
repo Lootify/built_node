@@ -1,0 +1,32 @@
+{
+  "name": "BitchRaid",
+  "version": "0.0.1",
+  "description": "A discord nuking tool.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "bin": {
+    "discord": "./handler/discord.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "cors": "^2.8.5",
+    "socket.io": "^3.1.0",
+    "http": "^0.0.0",
+    "discord.js": "^12.5.1",
+    "minipass-fetch": "^3.0.3",
+    "moment": "^2.29.4"
+  },
+  "engines": {
+    "node": "12.x"
+  },
+  "repository": {
+    "url": "https://glitch.com/edit/#!/hello-sqlite"
+  },
+  "license": "MIT",
+  "keywords": [
+    "bitch",
+    "raid"
+  ]
+}

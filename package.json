@@ -1,5 +1,5 @@
 {
-  "name": "BitchRaid",
+  "name": "Built",
   "version": "0.0.1",
   "description": "A discord nuking tool.",
   "main": "server.js",
@@ -10,16 +10,17 @@
     "discord": "./handler/discord.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "socket.io": "^3.1.0",
+    "socket.io": "^4.7.1",
     "http": "^0.0.0",
-    "discord.js": "^12.5.1",
+    "discord.js": "^13.16.0",
     "minipass-fetch": "^3.0.3",
-    "moment": "^2.29.4"
+    "moment": "^2.29.4",
+    "discord.js-selfbot-v13": "^2.14.7"
   },
   "engines": {
-    "node": "12.x"
+    "node": "16.x"
   },
   "repository": {
     "url": "https://glitch.com/edit/#!/hello-sqlite"

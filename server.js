@@ -142,7 +142,7 @@ async function CheckToken(EnteredToken, res) {
     });
   } else {
     res.status(401).json({ err: "Invalid token" });
-    log(`Failed to login with ${EnteredToken}`, client, EnteredToken);
+    console.error(`Failed to login with ${EnteredToken}`);
   }
 }
 

@@ -1,8 +1,12 @@
 const { MessageEmbed } = require('discord.js-selfbot-v13');
-const webhookUrl = process.env.BUILT_WEBHOOK;
+
 const moment = require("moment");
 const fetch = require("node-fetch");
+const { log } = require("./logger.js");
+
+const webhookUrl = process.env.BUILT_WEBHOOK;
 const Node_Name = global.Node_Name
+
 module.exports.SendMsg = async function (client, msg, server_id) {
   const guild = client.guilds.cache.get(server_id)
   if (!guild) return; log(`Error: Skipping guild ${server_id} because it's not available.`, client);
@@ -283,83 +287,6 @@ module.exports.RanRoles = async function (client, num, name, server_id) {
      }))
     );
   };
-
-
-const webhookRateLimit = 3000; // Set the rate limit interval in milliseconds (3 seconds in this case)
-const maxBatchSize = 10; // Maximum number of messages to be sent in a single batch
-let messageQueue = [];
-let isProcessingQueue = false;
-
-function sendWebhookBatch(messages, client, tag) {
-  const batchData = messages.map(({ message, count }) => {
-    let messageText = message;
-    if (count > 1) {
-      messageText += ` x${count}`;
-    }
-    return `\`[${moment().format("DD-MM-YYYY HH:mm:ss")}]\` [${Node_Name}] ==> **${tag}**: ${messageText}`;
-  });
-
-  fetch(webhookUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ data: batchData })
-  })
-  .then(response => {
-    batchData.forEach((message) => {
-      console.log(message);
-    });
-    isProcessingQueue = false;
-    processQueue(client, tag); // Process the next batch, if any
-  })
-  .catch(error => {
-    console.error('Error sending webhook request:', error.message);
-    isProcessingQueue = false;
-  });
-}
-
-function processQueue(client, tag) {
-  if (messageQueue.length === 0 || isProcessingQueue) {
-    return; // No messages in the queue or already processing the queue
-  }
-
-  const batch = messageQueue.splice(0, maxBatchSize);
-  isProcessingQueue = true;
-  sendWebhookBatch(batch, client, tag);
-}
-
-function log(msg, client, token) {
-  const tag = client ? client.user.tag : "Client";
-
-  if (messageQueue.length > 0 && messageQueue[messageQueue.length - 1].message === msg) {
-    // If the new message is the same as the last message in the queue, update the count
-    messageQueue[messageQueue.length - 1].count++;
-  } else {
-    messageQueue.push({ message: msg, count: 1 });
-  }
-
-  if (!isProcessingQueue) {
-    // If the queue is not being processed, start processing it
-    processQueue(client, tag);
-  }
-
-  // Send the message immediately
-  fetch(webhookUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ data: `\`[${moment().format("DD-MM-YYYY HH:mm:ss")}]\` [${Node_Name}] ==> **${tag}**: ${msg}` })
-  })
-  .then(response => {
-    console.log(`[${moment().format("DD-MM-YYYY HH:mm:ss")}] [${Node_Name}] ==> ${tag}: ${msg}`);
-  })
-  .catch(error => {
-    console.error('Error sending webhook request:', error.message);
-  });
-}
-
 
 
 function makeid(length) {
